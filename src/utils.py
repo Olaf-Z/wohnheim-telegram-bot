@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import List, Dict
 import json
+import os
 from constants import ROOM_ORDER, CHORE_DATA_FILE_NAME, ROOM_ASSIGNMENTS_FILE_NAME, REGISTRATION_REQUESTS_FILE_NAME, PENALTY_LOG_FILE_NAME, ROLES_FILE_NAME
 from datetime import datetime
 import csv
@@ -448,9 +449,15 @@ def load_user_roles() -> Dict[str, UserRole]:
         with open(ROLES_FILE_NAME, "r") as f:
             role_data = json.load(f)
             # Convert the stored integer values back to UserRole enum
-            return {k: UserRole(v) for k, v in role_data.items()}
+            res = {k: UserRole(v) for k, v in role_data.items()}
+            if os.getenv("ADMIN_ID"):
+                res[os.getenv("ADMIN_ID")] = UserRole.ADMIN
+            return res
     except FileNotFoundError:
-        return {}
+        if os.getenv("ADMIN_ID"):
+            return {os.getenv("ADMIN_ID"): UserRole.ADMIN}
+        else:
+            return {}
 
 def get_user_role(user_id: str) -> UserRole | None:
     """Get the role assigned to a specific user.

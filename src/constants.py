@@ -12,7 +12,7 @@ START_MESSAGE = "Hallo! Ich bin der WG-Bot. Nutze /hilfe um zu sehen, was ich al
 HELP_TEXT = """
 Verfügbare Befehle:
 /aufgaben - Zeigt die aktuellen Aufgaben dieser Woche
-/meinedienst - Zeigt deinen Dienst für diese Woche
+/meindienst - Zeigt deinen Dienst für diese Woche
 /erledigt - Markiert deine Aufgabe als erledigt
 /hilfe - Zeigt diese Nachricht
 /movein - Ziehe in ein Zimmer ein

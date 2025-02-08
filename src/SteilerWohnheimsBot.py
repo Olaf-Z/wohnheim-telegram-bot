@@ -3,6 +3,9 @@ from telegram.ext import Application, ContextTypes, CommandHandler, MessageHandl
 from telegram.ext import Updater
 from datetime import datetime, time
 import os
+import logging
+import logging.config
+from pathlib import Path
 from utils import (ChoreType, DueDay, ChoreInformation,
                        load_chore_data, save_chore_data,
                        get_user_room, get_room_assignments_reversed, add_registration_request,
@@ -11,7 +14,34 @@ from utils import (ChoreType, DueDay, ChoreInformation,
                        save_room_assignments, load_room_assignments)
 import constants as constants
 
-TOKEN_PATH = "/home/olaf/code/wohnheimsbot/token"
+# Set up logging from config file
+def setup_logging():
+    """Setup logging configuration from .conf file"""
+    config_path = Path(__file__).parent.parent / 'logging.conf'
+    
+    if config_path.exists():
+        # Set up the log file path
+        data_dir = os.getenv('DATA_FILE_DIRECTORY', 'data')
+        os.makedirs(data_dir, exist_ok=True)
+        log_file = os.path.join(data_dir, 'bot.log')
+        
+        # Configure logging with the .conf file
+        logging.config.fileConfig(
+            config_path,
+            defaults={'logfilepath': log_file},
+            disable_existing_loggers=False
+        )
+    else:
+        # Fallback configuration if conf file is not found
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            handlers=[logging.StreamHandler()]
+        )
+        logging.warning(f"Logging config not found at {config_path}, using basic configuration")
+
+# Initialize logging before anything else
+setup_logging()
 
 # Time to send reminders (24h format)
 REMINDER_TIME = time(hour=10, minute=0)  # 10:00 AM
@@ -33,6 +63,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         update (Update): The update object containing information about the incoming message
         context (ContextTypes.DEFAULT_TYPE): The context object for the callback
     """
+    logging.info(f"User {update.effective_user.id} started the bot")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=constants.START_MESSAGE
@@ -46,6 +77,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         update (Update): The update object containing information about the incoming message
         context (ContextTypes.DEFAULT_TYPE): The context object for the callback
     """
+    logging.info(f"User {update.effective_user.id} requested help")
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=constants.HELP_TEXT
@@ -61,6 +93,7 @@ async def show_chores(update: Update, context: ContextTypes.DEFAULT_TYPE):
         update (Update): The update object containing information about the incoming message
         context (ContextTypes.DEFAULT_TYPE): The context object for the callback
     """
+    logging.info(f"User {update.effective_user.id} requested chores")
     data = load_chore_data()
     message = "Aufgaben dieser Woche:\n\n"
     message += str(data)
@@ -80,6 +113,7 @@ async def mark_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
         update (Update): The update object containing information about the incoming message
         context (ContextTypes.DEFAULT_TYPE): The context object for the callback
     """
+    logging.info(f"User {update.effective_user.id} marked a chore as done")
     data = load_chore_data()
     user_id = update.effective_user.id
 
@@ -145,13 +179,14 @@ async def send_reminder(context: ContextTypes.DEFAULT_TYPE, user_id: str, messag
         user_id (str): Telegram user ID to send the message to
         message (str): The message text to send
     """
+    logging.info(f"Sending reminder to {user_id}")
     try:
         await context.bot.send_message(
             chat_id=user_id,
             text=message
         )
     except Exception as e:
-        print(f"Failed to send reminder to {user_id}: {e}")
+        logging.error(f"Failed to send reminder to {user_id}: {e}")
 
 
 async def rotate_chores(context: ContextTypes.DEFAULT_TYPE):
@@ -167,11 +202,14 @@ async def rotate_chores(context: ContextTypes.DEFAULT_TYPE):
         context (ContextTypes.DEFAULT_TYPE): The context object for the callback
     """
     try:
+        logging.info("Starting weekly chore rotation")
+        
         # Check for incomplete chores before rotating
         old_data = load_chore_data()
         incomplete_chores = get_incomplete_chores(old_data)
 
         if incomplete_chores:
+            logging.info(f"Found {len(incomplete_chores)} incomplete chores")
             # Save to CSV log file
             save_penalty_log(incomplete_chores)
 
@@ -182,8 +220,8 @@ async def rotate_chores(context: ContextTypes.DEFAULT_TYPE):
             for chore in incomplete_chores:
                 user_id = user_by_room.get(chore.assigned_to_room)
                 if user_id:
-                    message = constants.PENALTY_NOTIFICATION.format(
-                        chore.chore)
+                    logging.info(f"Sending penalty notification to room {chore.assigned_to_room}")
+                    message = constants.PENALTY_NOTIFICATION.format(chore.chore)
                     await send_reminder(context, user_id, message)
 
             # Generate message for console/admin
@@ -206,10 +244,10 @@ async def rotate_chores(context: ContextTypes.DEFAULT_TYPE):
         week_number = get_week_number()
         data = generate_chore_data_week_start(week_number)
         save_chore_data(data)
-        print(f"Successfully rotated chores for week {week_number}")
+        logging.info(f"Successfully rotated chores for week {week_number}")
 
     except Exception as e:
-        print(f"Error in chore rotation: {e}")
+        logging.error(f"Error in chore rotation: {e}", exc_info=True)
 
 
 async def check_reminders(context: ContextTypes.DEFAULT_TYPE):
@@ -223,36 +261,39 @@ async def check_reminders(context: ContextTypes.DEFAULT_TYPE):
         context (ContextTypes.DEFAULT_TYPE): The context object for the callback
     """
     try:
+        logging.info("Starting daily reminder check")
         data = load_chore_data()
         user_by_room = get_room_assignments_reversed()
 
         today = datetime.now()
-        weekday = today.weekday()  # 0 = Monday, 6 = Sunday
+        weekday = today.weekday()
+
+        logging.info(f"Processing reminders for {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][weekday]}")
 
         # Convert to DueDay enum
         today_due = DueDay(weekday)
         tomorrow_due = DueDay((weekday + 1) % 7)
 
-        # Send weekly overview on Mondays and daily reminders for tomorrow's tasks
+        reminder_count = 0
         for chore_status in data.chore_states:
             if chore_status.chore.type != ChoreType.FREI:
                 user_id = user_by_room.get(chore_status.assigned_to_room)
                 if user_id:
-                    # Send weekly overview on Monday
                     if weekday == 0:
-                        message = constants.WEEKLY_REMINDER.format(
-                            chore_status.chore)
+                        message = constants.WEEKLY_REMINDER.format(chore_status.chore)
                         await send_reminder(context, user_id, message)
+                        reminder_count += 1
 
-                    # Send reminder for tomorrow's tasks
                     if (not chore_status.completed and
                             chore_status.chore.due >= tomorrow_due):
-                        message = constants.DAILY_REMINDER.format(
-                            chore_status.chore)
+                        message = constants.DAILY_REMINDER.format(chore_status.chore)
                         await send_reminder(context, user_id, message)
+                        reminder_count += 1
+
+        logging.info(f"Sent {reminder_count} reminders")
 
     except Exception as e:
-        print(f"Error in reminder job: {e}")
+        logging.error(f"Error in reminder job: {e}", exc_info=True)
 
 
 async def move_in(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -268,7 +309,11 @@ async def move_in(update: Update, context: ContextTypes.DEFAULT_TYPE):
     Usage:
         /movein <room_number>
     """
+    user_id = update.effective_user.id
+    logging.info(f"User {user_id} attempting to move in")
+    
     if not context.args:
+        logging.warning(f"User {user_id} provided no room number")
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=constants.MOVE_IN_USAGE
@@ -280,19 +325,21 @@ async def move_in(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if room_number < 1 or room_number > 17:
             raise ValueError()
     except ValueError:
+        logging.warning(f"User {user_id} provided invalid room number: {context.args[0]}")
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=constants.INVALID_ROOM
         )
         return
 
-    user_id = str(update.effective_user.id)
-    if add_registration_request(user_id, room_number):
+    if add_registration_request(str(user_id), room_number):
+        logging.info(f"User {user_id} requested to move into room {room_number}")
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=constants.MOVE_IN_REQUESTED.format(room_number)
         )
     else:
+        logging.warning(f"Room {room_number} already has a pending request")
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=constants.MOVE_IN_ROOM_OCCUPIED
@@ -563,18 +610,18 @@ def main():
     2. Daily reminder job (10:00 AM)
     3. Weekly chore rotation job (Monday 3:00 AM)
     """
+    logging.info("Starting bot")
     bot_token = os.getenv("BOT_API_TOKEN")
 
     if not os.path.exists(constants.CHORE_DATA_FILE_NAME):
-        print(
-            f"Chore data file not found at {constants.CHORE_DATA_FILE_NAME}. Regenerating...")
+        logging.warning(f"Chore data file not found at {constants.CHORE_DATA_FILE_NAME}. Regenerating...")
         chore_data = generate_chore_data_week_start(get_week_number())
         save_chore_data(chore_data)
 
     # Enable job queue when building the application
     application = Application.builder().token(bot_token).build()
     
-
+    logging.info("Setting up command handlers")
     # Add command handlers
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CommandHandler('hilfe', help_command))
@@ -587,7 +634,7 @@ def main():
     application.add_handler(CommandHandler('show_requests', show_registration_requests))
     application.add_handler(CommandHandler('set_role', set_user_role))
 
-
+    logging.info("Setting up job queue")
     # Run reminders daily at 10:00
     application.job_queue.run_daily(
         check_reminders,
@@ -602,6 +649,7 @@ def main():
         days=(0,)  # Monday only
     )
 
+    logging.info("Bot started successfully")
     application.run_polling()
 
 
