@@ -1,7 +1,9 @@
-CHORE_DATA_FILE_NAME = "chores.json"
-ROOM_ASSIGNMENTS_FILE_NAME = "room_assignments.json"
-REGISTRATION_REQUESTS_FILE_NAME = "registration_requests.json"
-PENALTY_LOG_FILE_NAME = "penalty_log.csv"
+import os
+
+CHORE_DATA_FILE_NAME = os.path.join(os.getenv("DATA_FILE_DIRECTORY"), os.getenv("CHORE_DATA_FILE_NAME"))
+ROOM_ASSIGNMENTS_FILE_NAME = os.path.join(os.getenv("DATA_FILE_DIRECTORY"), os.getenv("ROOM_ASSIGNMENTS_FILE_NAME"))
+REGISTRATION_REQUESTS_FILE_NAME = os.path.join(os.getenv("DATA_FILE_DIRECTORY"), os.getenv("REGISTRATION_REQUESTS_FILE_NAME"))
+PENALTY_LOG_FILE_NAME = os.path.join(os.getenv("DATA_FILE_DIRECTORY"), os.getenv("PENALTY_LOG_FILE_NAME"))
 
 # Bot messages
 START_MESSAGE = "Hallo! Ich bin der WG-Bot. Nutze /hilfe um zu sehen, was ich alles kann!"
