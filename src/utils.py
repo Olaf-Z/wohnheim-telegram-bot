@@ -450,12 +450,12 @@ def load_user_roles() -> Dict[str, UserRole]:
             role_data = json.load(f)
             # Convert the stored integer values back to UserRole enum
             res = {k: UserRole(v) for k, v in role_data.items()}
-            if os.getenv("ADMIN_ID"):
-                res[os.getenv("ADMIN_ID")] = UserRole.ADMIN
+            if os.getenv("ADMIN_USER_ID"):
+                res[os.getenv("ADMIN_USER_ID")] = UserRole.ADMIN
             return res
     except FileNotFoundError:
-        if os.getenv("ADMIN_ID"):
-            return {os.getenv("ADMIN_ID"): UserRole.ADMIN}
+        if os.getenv("ADMIN_USER_ID"):
+            return {os.getenv("ADMIN_USER_ID"): UserRole.ADMIN}
         else:
             return {}
 
