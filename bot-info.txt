@@ -1,0 +1,2 @@
+bot name: wh-bot
+bot username: steiler_wh_bot
