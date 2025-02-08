@@ -7,7 +7,8 @@ from utils import (ChoreType, DueDay, ChoreInformation,
                        load_chore_data, save_chore_data,
                        get_user_room, get_room_assignments_reversed, add_registration_request,
                        remove_room_assignment, generate_chore_data_week_start, get_incomplete_chores,
-                       save_penalty_log)
+                       save_penalty_log, get_user_role, UserRole, load_registration_requests,
+                       save_room_assignments, load_room_assignments)
 import constants as constants
 
 TOKEN_PATH = "/home/olaf/code/wohnheimsbot/token"
@@ -363,6 +364,197 @@ async def show_my_chore(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def accept_all_registrations(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle the /accept_all command to approve all pending room registration requests.
+    
+    Only users with ADMIN or WOHNHEIMSSPRECHER roles can use this command.
+    
+    Args:
+        update (Update): The update object containing information about the incoming message
+        context (ContextTypes.DEFAULT_TYPE): The context object for the callback
+    """
+    user_id = str(update.effective_user.id)
+    user_role = get_user_role(user_id)
+    
+    # Check if user has required permissions
+    if user_role not in [UserRole.ADMIN, UserRole.WOHNHEIMSSPRECHER]:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=constants.ERROR_UNAUTHORIZED
+        )
+        return
+
+    # Load pending requests and current assignments
+    pending_requests = load_registration_requests()
+    current_assignments = load_room_assignments()
+    
+    if not pending_requests:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=constants.NO_PENDING_REQUESTS
+        )
+        return
+    
+    # Process each request
+    approved_count = 0
+    for user_id, room_number in pending_requests.items():
+        # Check if room is already assigned
+        if room_number not in [room for room in current_assignments.values()]:
+            current_assignments[user_id] = room_number
+            approved_count += 1
+            
+            # Notify the user that their request was approved
+            try:
+                await context.bot.send_message(
+                    chat_id=int(user_id),
+                    text=constants.MOVE_IN_APPROVED.format(room_number)
+                )
+            except Exception as e:
+                print(f"Failed to notify user {user_id}: {e}")
+    
+    # Save updated assignments and clear requests
+    save_room_assignments(current_assignments)
+    os.remove(constants.REGISTRATION_REQUESTS_FILE_NAME)
+    
+    # Send summary to admin
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=constants.REQUESTS_PROCESSED.format(
+            approved_count,
+            len(pending_requests) - approved_count
+        )
+    )
+
+
+async def show_registration_requests(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle the /show_requests command to list all pending room registration requests.
+    
+    Only users with ADMIN or WOHNHEIMSSPRECHER roles can use this command.
+    
+    Args:
+        update (Update): The update object containing information about the incoming message
+        context (ContextTypes.DEFAULT_TYPE): The context object for the callback
+    """
+    user_id = str(update.effective_user.id)
+    user_role = get_user_role(user_id)
+    
+    # Check if user has required permissions
+    if user_role not in [UserRole.ADMIN, UserRole.WOHNHEIMSSPRECHER]:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=constants.ERROR_UNAUTHORIZED
+        )
+        return
+
+    # Load pending requests
+    pending_requests = load_registration_requests()
+    
+    if not pending_requests:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=constants.NO_PENDING_REQUESTS
+        )
+        return
+    
+    # Format the requests list
+    requests_list = []
+    for user_id, room_number in pending_requests.items():
+        try:
+            user = await context.bot.get_chat(int(user_id))
+            user_name = user.full_name
+        except Exception:
+            user_name = f"Unknown User ({user_id})"
+        
+        requests_list.append(constants.REQUEST_ENTRY.format(
+            room_number,
+            user_name,
+            user_id
+        ))
+    
+    message = constants.PENDING_REQUESTS_HEADER + "\n" + "\n".join(requests_list)
+    
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=message
+    )
+
+
+async def set_user_role(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle the /set_role command to assign roles to users.
+    
+    Only users with ADMIN role can use this command.
+    Usage: /set_role <user_id> <role>
+    where role is either 'admin' or 'sprecher' or 'clear' to remove the role
+    
+    Args:
+        update (Update): The update object containing information about the incoming message
+        context (ContextTypes.DEFAULT_TYPE): The context object for the callback
+    """
+    user_id = str(update.effective_user.id)
+    user_role = get_user_role(user_id)
+    
+    # Check if user has admin permissions
+    if user_role != UserRole.ADMIN:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=constants.ERROR_UNAUTHORIZED
+        )
+        return
+
+    # Check command arguments
+    if len(context.args) != 2:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=constants.SET_ROLE_USAGE
+        )
+        return
+    
+    target_user_id = context.args[0]
+    role_str = context.args[1].lower()
+    
+    # Map role string to UserRole enum
+    role_mapping = {
+        'admin': UserRole.ADMIN,
+        'sprecher': UserRole.WOHNHEIMSSPRECHER,
+        'clear': None
+    }
+    
+    if role_str not in role_mapping:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=constants.INVALID_ROLE
+        )
+        return
+    
+    new_role = role_mapping[role_str]
+    
+    set_user_role(target_user_id, new_role)
+    
+    # Try to get user's name for the confirmation message
+    try:
+        user = await context.bot.get_chat(int(target_user_id))
+        user_name = user.full_name
+    except Exception:
+        user_name = f"User {target_user_id}"
+    
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=constants.ROLE_UPDATED.format(
+            user_name,
+            str(new_role).split('.')[1].lower()  # Convert UserRole.ADMIN to "admin"
+        )
+    )
+    
+    # Notify the user about their new role
+    try:
+        await context.bot.send_message(
+            chat_id=int(target_user_id),
+            text=constants.ROLE_ASSIGNED.format(str(new_role).split('.')[1].lower())
+        )
+    except Exception as e:
+        print(f"Failed to notify user {target_user_id} about new role: {e}")
+
+
 def main():
     """Initialize and start the bot.
 
@@ -391,6 +583,9 @@ def main():
     application.add_handler(CommandHandler('movein', move_in))
     application.add_handler(CommandHandler('moveout', move_out))
     application.add_handler(CommandHandler('meindienst', show_my_chore))
+    application.add_handler(CommandHandler('accept_all', accept_all_registrations))
+    application.add_handler(CommandHandler('show_requests', show_registration_requests))
+    application.add_handler(CommandHandler('set_role', set_user_role))
 
 
     # Run reminders daily at 10:00

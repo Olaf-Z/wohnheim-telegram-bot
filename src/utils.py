@@ -1,11 +1,15 @@
 from enum import Enum
 from typing import List, Dict
 import json
-from constants import ROOM_ORDER, CHORE_DATA_FILE_NAME, ROOM_ASSIGNMENTS_FILE_NAME, REGISTRATION_REQUESTS_FILE_NAME, PENALTY_LOG_FILE_NAME
+from constants import ROOM_ORDER, CHORE_DATA_FILE_NAME, ROOM_ASSIGNMENTS_FILE_NAME, REGISTRATION_REQUESTS_FILE_NAME, PENALTY_LOG_FILE_NAME, ROLES_FILE_NAME
 from datetime import datetime
 import csv
 
 
+class UserRole(Enum):
+    """Enumeration of all possible user roles in the dormitory."""
+    ADMIN = 0
+    WOHNHEIMSSPRECHER = 1
 
 class ChoreType(Enum):
     """Enumeration of all possible chore types in the dormitory.
@@ -432,3 +436,55 @@ def get_incomplete_chores(data: ChoreInformation) -> List[ChoreStatus]:
         if not chore.completed 
         and chore.chore.type != ChoreType.FREI
     ]
+
+
+def load_user_roles() -> Dict[str, UserRole]:
+    """Load user role assignments from JSON file.
+    
+    Returns:
+        Dict[str, UserRole]: Dictionary mapping user IDs to their roles
+    """
+    try:
+        with open(ROLES_FILE_NAME, "r") as f:
+            role_data = json.load(f)
+            # Convert the stored integer values back to UserRole enum
+            return {k: UserRole(v) for k, v in role_data.items()}
+    except FileNotFoundError:
+        return {}
+
+def get_user_role(user_id: str) -> UserRole | None:
+    """Get the role assigned to a specific user.
+    
+    Args:
+        user_id (str): Telegram user ID
+        
+    Returns:
+        UserRole | None: The user's role if assigned, None otherwise
+    """
+    roles = load_user_roles()
+    return UserRole(roles[str(user_id)]) if str(user_id) in roles else None
+
+def set_user_role(user_id: str, role: UserRole | None):
+    """Set the role for a specific user.
+    
+    Args:
+        user_id (str): Telegram user ID
+        role (UserRole): The role to set for the user
+    """
+    roles = load_user_roles()
+    if role is None:
+        del roles[str(user_id)]
+    else:
+        roles[str(user_id)] = role
+    save_user_roles(roles)
+
+def save_user_roles(roles: Dict[str, UserRole]):
+    """Save user role assignments to JSON file.
+    
+    Args:
+        roles (Dict[str, UserRole]): Dictionary mapping user IDs to their roles
+    """
+    # Convert UserRole enum to integer for JSON serialization
+    role_data = {k: v.value for k, v in roles.items()}
+    with open(ROLES_FILE_NAME, "w") as f:
+        json.dump(role_data, f)

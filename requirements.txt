@@ -1,3 +1,4 @@
-python-telegram-bot
+python-telegram-bot>=20.0  # We're using the async version of PTB
 pytz  # For timezone handling
 APScheduler>=3.6.3  # For job queue functionality
+python-dotenv  # For loading environment variables from .env file
