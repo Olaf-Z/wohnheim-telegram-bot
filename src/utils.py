@@ -1,9 +1,10 @@
 from enum import Enum
 from typing import List, Dict
 import json
-from src.constants import CHORES, ROOM_ORDER
+from constants import ROOM_ORDER, CHORE_DATA_FILE_NAME, ROOM_ASSIGNMENTS_FILE_NAME, REGISTRATION_REQUESTS_FILE_NAME, PENALTY_LOG_FILE_NAME
 from datetime import datetime
 import csv
+
 
 
 class ChoreType(Enum):
@@ -12,13 +13,13 @@ class ChoreType(Enum):
     Each chore type represents a specific task that needs to be done.
     The FREI type indicates no chore assignment for that slot.
     """
-    EINKAUFSDIENST = 0,
-    MUELLDIENST = 1,
-    GETRAENKE = 2,
-    KUECHE = 3,
-    MASCHINEN = 4,
-    GESCHIRRTUECHER = 5,
-    FREI = 6,
+    EINKAUFSDIENST = 0
+    MUELLDIENST = 1
+    GETRAENKE = 2
+    KUECHE = 3
+    MASCHINEN = 4
+    GESCHIRRTUECHER = 5
+    FREI = 6
 
     def __str__(self):
         """Convert chore type to its German display name."""
@@ -39,14 +40,14 @@ class DueDay(Enum):
     Includes a special NONE value for FREI chores that have no due date.
     Values 0-6 correspond to Monday through Sunday.
     """
-    MO = 0,
-    DI = 1,
-    MI = 2,
-    DO = 3,
-    FR = 4,
-    SA = 5,
-    SO = 6,
-    NONE = 7,
+    MO = 0
+    DI = 1
+    MI = 2
+    DO = 3
+    FR = 4
+    SA = 5
+    SO = 6
+    NONE = 7
 
     def __str__(self):
         """Convert weekday to its German display name."""
@@ -82,9 +83,10 @@ class Chore:
 
     def to_dict(self):
         """Alias for __dict__ for explicit serialization calls."""
-        return self.__dict__
+        return self.__dict__()
 
-    def from_dict(self, dict: dict):
+    @staticmethod
+    def from_dict(dict: dict):
         """Create a Chore instance from a dictionary.
         
         Args:
@@ -128,14 +130,15 @@ class ChoreStatus:
         return {
             "completed": self.completed,
             "assigned_to_room": self.assigned_to_room,
-            "chore": self.chore.__dict__
+            "chore": self.chore.to_dict()
         }
 
     def to_dict(self):
         """Alias for __dict__ for explicit serialization calls."""
-        return self.__dict__
+        return self.__dict__()
 
-    def from_dict(self, dict: dict):
+    @staticmethod
+    def from_dict(dict: dict):
         """Create a ChoreStatus instance from a dictionary.
         
         Args:
@@ -151,6 +154,25 @@ class ChoreStatus:
         status = "✅" if self.completed or self.chore.type == ChoreType.FREI else "❌"
         return f"Zimmer {self.assigned_to_room}: {self.chore} {status}"
 
+CHORES = [
+    Chore(ChoreType.EINKAUFSDIENST, DueDay.SO),
+    Chore(ChoreType.FREI, DueDay.NONE),
+    Chore(ChoreType.MUELLDIENST, DueDay.DI),
+    Chore(ChoreType.FREI, DueDay.NONE),
+    Chore(ChoreType.MUELLDIENST, DueDay.FR),
+    Chore(ChoreType.FREI, DueDay.NONE),
+    Chore(ChoreType.GETRAENKE, DueDay.SO),
+    Chore(ChoreType.FREI, DueDay.NONE),
+    Chore(ChoreType.KUECHE, DueDay.DI),
+    Chore(ChoreType.FREI, DueDay.NONE),
+    Chore(ChoreType.MASCHINEN, DueDay.SO),
+    Chore(ChoreType.FREI, DueDay.NONE),
+    Chore(ChoreType.FREI, DueDay.NONE),
+    Chore(ChoreType.GESCHIRRTUECHER, DueDay.SO),
+    Chore(ChoreType.FREI, DueDay.NONE),
+    Chore(ChoreType.MUELLDIENST, DueDay.SO),
+    Chore(ChoreType.FREI, DueDay.NONE)
+]
 
 class ChoreInformation:
     """Container for all chore statuses in a given week.
@@ -175,14 +197,15 @@ class ChoreInformation:
     def __dict__(self):
         """Convert all chore information to dictionary for JSON serialization."""
         return {
-            "chore_states": [chore.__dict__ for chore in self.chore_states]
+            "chore_states": [chore.to_dict() for chore in self.chore_states]
         }
 
     def to_dict(self):
         """Alias for __dict__ for explicit serialization calls."""
-        return self.__dict__
+        return self.__dict__()
 
-    def from_dict(self, dict: dict):
+    @staticmethod
+    def from_dict(dict: dict):
         """Create a ChoreInformation instance from a dictionary.
         
         Args:
@@ -204,7 +227,7 @@ def save_chore_data(data: ChoreInformation):
     Args:
         data (ChoreInformation): The chore data to save
     """
-    with open("chore_data.json", "w") as f:
+    with open(CHORE_DATA_FILE_NAME, "w") as f:
         json.dump(data.to_dict(), f)
 
 
@@ -217,7 +240,7 @@ def load_chore_data() -> ChoreInformation:
     Raises:
         FileNotFoundError: If the chore data file doesn't exist
     """
-    with open("chore_data.json", "r") as f:
+    with open(CHORE_DATA_FILE_NAME, "r") as f:
         return ChoreInformation.from_dict(json.load(f))
 
 
@@ -227,7 +250,7 @@ def save_room_assignments(assignments: Dict[str, int]):
     Args:
         assignments (Dict[str, int]): Dictionary mapping user IDs to room numbers
     """
-    with open("room_assignments.json", "w") as f:
+    with open(ROOM_ASSIGNMENTS_FILE_NAME, "w") as f:
         json.dump(assignments, f)
 
 
@@ -238,7 +261,7 @@ def load_room_assignments() -> Dict[str, int]:
         Dict[str, int]: Dictionary mapping user IDs to room numbers
     """
     try:
-        with open("room_assignments.json", "r") as f:
+        with open(ROOM_ASSIGNMENTS_FILE_NAME, "r") as f:
             return json.load(f)
     except FileNotFoundError:
         return {}
@@ -279,7 +302,7 @@ def save_registration_requests(requests: Dict[str, int]):
     Args:
         requests (Dict[str, int]): Dictionary mapping user IDs to requested room numbers
     """
-    with open("registration_requests.json", "w") as f:
+    with open(REGISTRATION_REQUESTS_FILE_NAME, "w") as f:
         json.dump(requests, f)
 
 
@@ -290,7 +313,7 @@ def load_registration_requests() -> Dict[str, int]:
         Dict[str, int]: Dictionary mapping user IDs to requested room numbers
     """
     try:
-        with open("registration_requests.json", "r") as f:
+        with open(REGISTRATION_REQUESTS_FILE_NAME, "r") as f:
             return json.load(f)
     except FileNotFoundError:
         return {}
@@ -377,14 +400,14 @@ def save_penalty_log(penalties: List[ChoreStatus]):
     
     # Create CSV file if it doesn't exist and write headers
     try:
-        with open("penalty_log.csv", "x", newline='', encoding='utf-8') as f:
+        with open(PENALTY_LOG_FILE_NAME, "x", newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(["Date", "Room", "Chore", "DueDay"])
     except FileExistsError:
         pass
     
     # Append new penalties
-    with open("penalty_log.csv", "a", newline='', encoding='utf-8') as f:
+    with open(PENALTY_LOG_FILE_NAME, "a", newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         for chore in penalties:
             writer.writerow([

@@ -1,4 +1,7 @@
-from src.utils import Chore, ChoreType, DueDay
+CHORE_DATA_FILE_NAME = "chores.json"
+ROOM_ASSIGNMENTS_FILE_NAME = "room_assignments.json"
+REGISTRATION_REQUESTS_FILE_NAME = "registration_requests.json"
+PENALTY_LOG_FILE_NAME = "penalty_log.csv"
 
 # Bot messages
 START_MESSAGE = "Hallo! Ich bin der WG-Bot. Nutze /hilfe um zu sehen, was ich alles kann!"
@@ -6,6 +9,7 @@ START_MESSAGE = "Hallo! Ich bin der WG-Bot. Nutze /hilfe um zu sehen, was ich al
 HELP_TEXT = """
 Verfügbare Befehle:
 /aufgaben - Zeigt die aktuellen Aufgaben dieser Woche
+/meinedienst - Zeigt deinen Dienst für diese Woche
 /erledigt - Markiert deine Aufgabe als erledigt
 /hilfe - Zeigt diese Nachricht
 /movein - Ziehe in ein Zimmer ein
@@ -37,26 +41,6 @@ MOVE_IN_USAGE = "Bitte gib deine Zimmernummer an, z.B.: /movein 12"
 MOVE_OUT_SUCCESS = "Tschüss! Du wurdest erfolgreich aus Zimmer {} ausgetragen. Danke für deine Mitarbeit!"
 MOVE_OUT_FAILED = "Du bist momentan keinem Zimmer zugeordnet."
 
-# Chores as seen on the board
-CHORES = [
-    Chore(ChoreType.EINKAUFSDIENST, DueDay.SO),
-    Chore(ChoreType.FREI, DueDay.NONE),
-    Chore(ChoreType.MUELLDIENST, DueDay.DI),
-    Chore(ChoreType.FREI, DueDay.NONE),
-    Chore(ChoreType.MUELLDIENST, DueDay.FR),
-    Chore(ChoreType.FREI, DueDay.NONE),
-    Chore(ChoreType.GETRAENKE, DueDay.SO),
-    Chore(ChoreType.FREI, DueDay.NONE),
-    Chore(ChoreType.KUECHE, DueDay.DI),
-    Chore(ChoreType.FREI, DueDay.NONE),
-    Chore(ChoreType.MASCHINEN, DueDay.SO),
-    Chore(ChoreType.FREI, DueDay.NONE),
-    Chore(ChoreType.FREI, DueDay.NONE),
-    Chore(ChoreType.GESCHIRRTUECHER, DueDay.SO),
-    Chore(ChoreType.FREI, DueDay.NONE),
-    Chore(ChoreType.MUELLDIENST, DueDay.SO),
-    Chore(ChoreType.FREI, DueDay.NONE)
-]
 
 # Room rotation order as seen on the board
 ROOM_ORDER = [17, 15, 10, 2, 5, 7, 9, 16, 13, 1, 8, 4, 3, 6, 12, 14, 11]
@@ -67,4 +51,7 @@ PENALTY_LOG_ENTRY = "Zimmer {}: {} (fällig {})"
 
 # Penalty notification
 PENALTY_NOTIFICATION = "⚠️ Du hast letzte Woche deine Aufgabe nicht erledigt:\n{}"
+
+# Personal chore messages
+YOUR_CHORE = "Dein Dienst diese Woche:\n{}"
 
