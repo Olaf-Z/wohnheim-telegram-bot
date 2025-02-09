@@ -7,7 +7,7 @@ PENALTY_LOG_FILE_NAME = os.path.join(os.getenv("DATA_FILE_DIRECTORY"), os.getenv
 ROLES_FILE_NAME = "data/roles.json"
 
 # Bot messages
-START_MESSAGE = "Hallo! Ich bin der WG-Bot. Nutze /hilfe um zu sehen, was ich alles kann!"
+START_MESSAGE = "Hallo! Ich bin der steile Wohnheimsbot. Nutze /hilfe um zu sehen, was ich an der Tasse kann!"
 
 HELP_TEXT = """
 Verfügbare Befehle:
@@ -18,6 +18,12 @@ Verfügbare Befehle:
 /movein - Ziehe in ein Zimmer ein
 /moveout - Ziehe aus deinem Zimmer aus
 /start - Zeigt die Willkommensnachricht
+
+Admin-Befehle:
+/accept_all - Genehmigt alle ausstehenden Einzugsanfragen
+/show_requests - Zeigt alle ausstehenden Einzugsanfragen
+/set_role - Setzt die Rolle eines Benutzers
+/complete_all - Markiert alle Aufgaben als erledigt
 """
 
 # Error messages
@@ -46,7 +52,7 @@ MOVE_OUT_FAILED = "Du bist momentan keinem Zimmer zugeordnet."
 
 
 # Room rotation order as seen on the board
-ROOM_ORDER = [17, 15, 10, 2, 5, 7, 9, 16, 13, 1, 8, 4, 3, 6, 12, 14, 11]
+ROOM_ORDER = [9, 16, 13, 1, 8, 4, 3, 6, 12, 14, 11, 17, 15, 10, 2, 5, 7]
 
 # Penalty messages
 PENALTY_LOG_HEADER = "⚠️ Nicht erledigte Aufgaben der letzten Woche:"
@@ -73,4 +79,7 @@ SET_ROLE_USAGE = "Verwendung: /set_role <user_id> <role>\nMögliche Rollen: admi
 INVALID_ROLE = "Ungültige Rolle. Mögliche Rollen sind: admin, sprecher"
 ROLE_UPDATED = "{} wurde die Rolle {} zugewiesen."
 ROLE_ASSIGNED = "Dir wurde die Rolle {} zugewiesen."
+
+# All chores completed message
+ALL_CHORES_COMPLETED = "Alle Aufgaben wurden vom Administrator als erledigt markiert! 🎉"
 

@@ -160,7 +160,7 @@ async def mark_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # Mark the chore as completed
-    data = ChoreInformation(data.with_completed(room_number))
+    data = data.with_completed(room_number)
     save_chore_data(data)
 
     await context.bot.send_message(
@@ -411,6 +411,31 @@ async def show_my_chore(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+async def complete_all_chores(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle the /alleerledigt command to mark all chores as completed.
+    
+    Args:
+        update (Update): The update object containing information about the incoming message
+        context (ContextTypes.DEFAULT_TYPE): The context object for the callback
+    """
+    user_id = str(update.effective_user.id)
+    user_role = get_user_role(user_id)
+    
+    # Check if user has required permissions
+    if user_role not in [UserRole.ADMIN]:
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=constants.ERROR_UNAUTHORIZED
+        )
+        return
+    data = load_chore_data()
+    data = data.with_completed_all()
+    save_chore_data(data)
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=constants.ALL_CHORES_COMPLETED
+    )
+
 async def accept_all_registrations(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the /accept_all command to approve all pending room registration requests.
     
@@ -633,6 +658,7 @@ def main():
     application.add_handler(CommandHandler('accept_all', accept_all_registrations))
     application.add_handler(CommandHandler('show_requests', show_registration_requests))
     application.add_handler(CommandHandler('set_role', set_user_role))
+    application.add_handler(CommandHandler('complete_all', complete_all_chores))
 
     logging.info("Setting up job queue")
     # Run reminders daily at 10:00

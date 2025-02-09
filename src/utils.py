@@ -197,7 +197,11 @@ class ChoreInformation:
         Returns:
             List[ChoreStatus]: New list with the specified room's chore marked as completed
         """
-        return [chore.with_completed() if chore.assigned_to_room == room_number else chore for chore in self.chore_states]
+        return ChoreInformation([chore.with_completed() if chore.assigned_to_room == room_number else chore for chore in self.chore_states])
+
+    def with_completed_all(self):
+        """Create a new list of chore states with all chores marked as completed."""
+        return ChoreInformation([chore.with_completed() for chore in self.chore_states])
 
     def __dict__(self):
         """Convert all chore information to dictionary for JSON serialization."""
