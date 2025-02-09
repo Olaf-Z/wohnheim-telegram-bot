@@ -362,7 +362,7 @@ def generate_chore_data_week_start(week_number: int):
         ChoreInformation: New chore assignments for the week
     """
     # Calculate offset based on week number
-    offset = week_number % len(ROOM_ORDER)
+    offset = -(week_number % len(ROOM_ORDER))
     
     # Rotate room order by offset
     rotated_rooms = ROOM_ORDER[offset:] + ROOM_ORDER[:offset]
