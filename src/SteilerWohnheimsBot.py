@@ -1,8 +1,8 @@
 from telegram import Update
-from telegram.ext import Application, ContextTypes, CommandHandler, MessageHandler, filters
-from telegram.ext import Updater
+from telegram.ext import Application, ContextTypes, CommandHandler
 from datetime import datetime, time
 import os
+import pytz
 import logging
 import logging.config
 from pathlib import Path
@@ -665,14 +665,16 @@ def main():
     application.job_queue.run_daily(
         check_reminders,
         time=REMINDER_TIME,
-        days=(0, 1, 2, 3, 4, 5, 6)
+        days=(0, 1, 2, 3, 4, 5, 6),
+        tz=pytz.timezone('Europe/Berlin')
     )
 
     # Run chore rotation every Monday at 03:00 am
     application.job_queue.run_daily(
         rotate_chores,
         time=time(hour=3, minute=0),
-        days=(0,)  # Monday only
+        days=(0,),  # Monday only
+        tz=pytz.timezone('Europe/Berlin')
     )
 
     logging.info("Bot started successfully")
