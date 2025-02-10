@@ -19,10 +19,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the source code
 COPY src/ ./src/
-COPY $ROOM_ASSIGNMENTS_FILE ./data/$ROOM_ASSIGNMENTS_FILE
-
-# Create directory for data files
-RUN mkdir -p /app/data
+COPY data/ ./data/
 
 # Set environment variables
 ENV PYTHONPATH=/app
