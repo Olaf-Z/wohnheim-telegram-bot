@@ -666,7 +666,6 @@ def main():
         check_reminders,
         time=REMINDER_TIME,
         days=(0, 1, 2, 3, 4, 5, 6),
-        tz=pytz.timezone('Europe/Berlin')
     )
 
     # Run chore rotation every Monday at 03:00 am
@@ -674,7 +673,6 @@ def main():
         rotate_chores,
         time=time(hour=3, minute=0),
         days=(0,),  # Monday only
-        tz=pytz.timezone('Europe/Berlin')
     )
 
     logging.info("Bot started successfully")
