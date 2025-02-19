@@ -2,11 +2,10 @@ from telegram import Update
 from telegram.ext import Application, ContextTypes, CommandHandler
 from datetime import datetime, time
 import os
-import pytz
 import logging
 import logging.config
 from pathlib import Path
-from utils import (ChoreType, DueDay, ChoreInformation,
+from utils import (ChoreType, DueDay,
                        load_chore_data, save_chore_data,
                        get_user_room, get_room_assignments_reversed, add_registration_request,
                        remove_room_assignment, generate_chore_data_week_start, get_incomplete_chores,
@@ -285,7 +284,7 @@ async def check_reminders(context: ContextTypes.DEFAULT_TYPE):
                         reminder_count += 1
 
                     if (not chore_status.completed and
-                            chore_status.chore.due >= tomorrow_due):
+                            chore_status.chore.due.value >= tomorrow_due.value):
                         message = constants.DAILY_REMINDER.format(chore_status.chore)
                         await send_reminder(context, user_id, message)
                         reminder_count += 1
@@ -672,7 +671,7 @@ def main():
     application.job_queue.run_daily(
         rotate_chores,
         time=time(hour=3, minute=0),
-        days=(0,),  # Monday only
+        days=(1,),  # Monday only
     )
 
     logging.info("Bot started successfully")
