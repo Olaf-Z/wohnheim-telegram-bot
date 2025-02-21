@@ -271,7 +271,6 @@ async def check_reminders(context: ContextTypes.DEFAULT_TYPE):
 
         # Convert to DueDay enum
         today_due = DueDay(weekday)
-        tomorrow_due = DueDay((weekday + 1) % 7)
 
         reminder_count = 0
         for chore_status in data.chore_states:
@@ -284,7 +283,7 @@ async def check_reminders(context: ContextTypes.DEFAULT_TYPE):
                         reminder_count += 1
 
                     if (not chore_status.completed and
-                            chore_status.chore.due.value >= tomorrow_due.value):
+                            chore_status.chore.due.value >= today_due.value):
                         message = constants.DAILY_REMINDER.format(chore_status.chore)
                         await send_reminder(context, user_id, message)
                         reminder_count += 1

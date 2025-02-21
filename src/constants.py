@@ -38,7 +38,7 @@ TASK_COMPLETED = "Super! {} wurde als erledigt markiert! 🎉"
 
 # Reminder messages
 WEEKLY_REMINDER = "Deine Aufgabe diese Woche ist: {}"
-DAILY_REMINDER = "Erinnerung: {} ist morgen fällig!"
+DAILY_REMINDER = "Erinnerung: {} ist noch fällig!"
 
 # Room registration messages
 MOVE_IN_REQUESTED = "Willkommen! Dein Einzug in Zimmer {} wurde beantragt. Ein Administrator wird die Anfrage prüfen."
@@ -52,7 +52,7 @@ MOVE_OUT_FAILED = "Du bist momentan keinem Zimmer zugeordnet."
 
 
 # Room rotation order as seen on the board
-ROOM_ORDER = [9, 16, 13, 1, 8, 4, 3, 6, 12, 14, 11, 17, 15, 10, 2, 5, 7]
+ROOM_ORDER = [9, 16, 13, 1, 8, 4, 3, 6, 12, 14, 11, 17, 15, 10, 2, 7, 5]
 
 # Penalty messages
 PENALTY_LOG_HEADER = "⚠️ Nicht erledigte Aufgaben der letzten Woche:"
