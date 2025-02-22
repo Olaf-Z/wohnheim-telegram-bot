@@ -269,9 +269,6 @@ async def check_reminders(context: ContextTypes.DEFAULT_TYPE):
 
         logging.info(f"Processing reminders for {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][weekday]}")
 
-        # Convert to DueDay enum
-        today_due = DueDay(weekday)
-
         reminder_count = 0
         for chore_status in data.chore_states:
             if chore_status.chore.type != ChoreType.FREI:
@@ -283,7 +280,7 @@ async def check_reminders(context: ContextTypes.DEFAULT_TYPE):
                         reminder_count += 1
 
                     if (not chore_status.completed and
-                            chore_status.chore.due.value >= today_due.value):
+                            chore_status.chore.due.value <= weekday):
                         message = constants.DAILY_REMINDER.format(chore_status.chore)
                         await send_reminder(context, user_id, message)
                         reminder_count += 1
