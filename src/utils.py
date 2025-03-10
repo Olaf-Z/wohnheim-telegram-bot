@@ -170,7 +170,7 @@ CHORES = [
     Chore(ChoreType.FREI, DueDay.NONE),
     Chore(ChoreType.KUECHE, DueDay.DI),
     Chore(ChoreType.FREI, DueDay.NONE),
-    Chore(ChoreType.MASCHINEN, DueDay.SO),
+    Chore(ChoreType.KUECHE, DueDay.SA),
     Chore(ChoreType.FREI, DueDay.NONE),
     Chore(ChoreType.FREI, DueDay.NONE),
     Chore(ChoreType.GESCHIRRTUECHER, DueDay.SO),
