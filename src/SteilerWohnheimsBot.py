@@ -1,3 +1,4 @@
+import re
 from telegram import Update
 from telegram.ext import Application, ContextTypes, CommandHandler
 from datetime import datetime, time
@@ -5,8 +6,8 @@ import os
 import logging
 import logging.config
 from pathlib import Path
-from utils import (ChoreType, DueDay,
-                       load_chore_data, save_chore_data,
+from utils import (ChoreType, DueDay, clear_shopping_list,
+                       load_chore_data, load_shopping_list, save_chore_data,
                        get_user_room, get_room_assignments_reversed, add_registration_request,
                        remove_room_assignment, generate_chore_data_week_start, get_incomplete_chores,
                        save_penalty_log, get_user_role, UserRole, load_registration_requests,
@@ -160,6 +161,9 @@ async def mark_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Mark the chore as completed
     data = data.with_completed(room_number)
+    if user_chore.chore.type == ChoreType.EINKAUFSDIENST:
+        clear_shopping_list()
+    
     save_chore_data(data)
 
     await context.bot.send_message(
@@ -622,6 +626,58 @@ async def set_user_role(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print(f"Failed to notify user {target_user_id} about new role: {e}")
 
 
+async def show_shopping_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle the /einkaufsliste command by showing the current shopping list.
+    
+    Args:
+        update (Update): The update object containing information about the incoming message
+        context (ContextTypes.DEFAULT_TYPE): The context object for the callback
+    """
+    logging.info(f"User {update.effective_user.id} requested shopping list")
+    shopping_list = load_shopping_list()
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=constants.SHOPPING_LIST_HEADER + "\n" + "\n".join(shopping_list)
+    )
+
+async def add_to_shopping_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle the /einkaufen command by adding an item to the shopping list.
+    
+    Args:
+        update (Update): The update object containing information about the incoming message
+        context (ContextTypes.DEFAULT_TYPE): The context object for the callback
+    """
+    user_id = update.effective_user.id
+    if not context.args:
+        logging.warning(f"User {user_id} provided no shopping item")
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=constants.SHOPPING_LIST_USAGE
+        )
+        return
+    
+    item = " ".join(context.args)
+    if not re.match(r'^[a-zA-Z0-9\s]+$', item):
+        logging.warning(f"User {user_id} provided invalid shopping item: {item}")
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=constants.SHOPPING_LIST_INVALID_ITEM
+        )
+        return
+    if any(item.lower() == existing_item.lower() for existing_item in load_shopping_list()):
+        logging.warning(f"User {user_id} provided duplicate shopping item: {item}")
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=constants.SHOPPING_LIST_DUPLICATE_ITEM
+        )
+        return
+    logging.info(f"User {user_id} added '{item}' to shopping list")
+    add_to_shopping_list(item)
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=constants.SHOPPING_LIST_ENTRY_ADDED.format(item)
+    )
+
 def main():
     """Initialize and start the bot.
 
@@ -654,6 +710,8 @@ def main():
     application.add_handler(CommandHandler('show_requests', show_registration_requests))
     application.add_handler(CommandHandler('set_role', set_user_role))
     application.add_handler(CommandHandler('complete_all', complete_all_chores))
+    application.add_handler(CommandHandler('einkaufen', add_to_shopping_list))
+    application.add_handler(CommandHandler('einkaufsliste', show_shopping_list))
 
     logging.info("Setting up job queue")
     # Run reminders daily at 10:00

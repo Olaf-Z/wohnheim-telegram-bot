@@ -4,6 +4,7 @@ CHORE_DATA_FILE_NAME = os.path.join(os.getenv("DATA_FILE_DIRECTORY"), os.getenv(
 ROOM_ASSIGNMENTS_FILE_NAME = os.path.join(os.getenv("DATA_FILE_DIRECTORY"), os.getenv("ROOM_ASSIGNMENTS_FILE_NAME"))
 REGISTRATION_REQUESTS_FILE_NAME = os.path.join(os.getenv("DATA_FILE_DIRECTORY"), os.getenv("REGISTRATION_REQUESTS_FILE_NAME"))
 PENALTY_LOG_FILE_NAME = os.path.join(os.getenv("DATA_FILE_DIRECTORY"), os.getenv("PENALTY_LOG_FILE_NAME"))
+SHOPPING_LIST_FILE_NAME = os.path.join(os.getenv("DATA_FILE_DIRECTORY"), os.getenv("SHOPPING_LIST_FILE_NAME"))
 ROLES_FILE_NAME = "data/roles.json"
 
 # Bot messages
@@ -18,6 +19,8 @@ Verfügbare Befehle:
 /movein - Ziehe in ein Zimmer ein
 /moveout - Ziehe aus deinem Zimmer aus
 /start - Zeigt die Willkommensnachricht
+/einkaufen - Fügt einen Artikel zur Einkaufsliste hinzu
+/einkaufsliste - Zeigt die aktuelle Einkaufsliste
 
 Admin-Befehle:
 /accept_all - Genehmigt alle ausstehenden Einzugsanfragen
@@ -83,3 +86,9 @@ ROLE_ASSIGNED = "Dir wurde die Rolle {} zugewiesen."
 # All chores completed message
 ALL_CHORES_COMPLETED = "Alle Aufgaben wurden vom Administrator als erledigt markiert! 🎉"
 
+# Shopping list messages
+SHOPPING_LIST_HEADER = "🛒 Einkaufsliste:"
+SHOPPING_LIST_USAGE = "Verwendung: /einkaufen <item>\nBeispiel: /einkaufen Milch"
+SHOPPING_LIST_ENTRY_ADDED = "{} wurde zur Einkaufsliste hinzugefügt!"
+SHOPPING_LIST_INVALID_ITEM = "Ungültiges Einkaufsitem. Bitte verwende nur Buchstaben, Zahlen und Leerzeichen."
+SHOPPING_LIST_DUPLICATE_ITEM = "Dieser Artikel ist bereits in der Einkaufsliste enthalten."

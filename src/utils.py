@@ -2,7 +2,7 @@ from enum import Enum
 from typing import List, Dict
 import json
 import os
-from constants import ROOM_ORDER, CHORE_DATA_FILE_NAME, ROOM_ASSIGNMENTS_FILE_NAME, REGISTRATION_REQUESTS_FILE_NAME, PENALTY_LOG_FILE_NAME, ROLES_FILE_NAME
+from constants import ROOM_ORDER, CHORE_DATA_FILE_NAME, ROOM_ASSIGNMENTS_FILE_NAME, REGISTRATION_REQUESTS_FILE_NAME, PENALTY_LOG_FILE_NAME, ROLES_FILE_NAME, SHOPPING_LIST_FILE_NAME
 from datetime import datetime
 import csv
 
@@ -499,3 +499,40 @@ def save_user_roles(roles: Dict[str, UserRole]):
     role_data = {k: v.value for k, v in roles.items()}
     with open(ROLES_FILE_NAME, "w") as f:
         json.dump(role_data, f)
+
+def add_to_shopping_list(item: str):
+    """Add an item to the shopping list.
+    
+    Args:
+        item (str): The item to add to the shopping list
+    """
+    shopping_list = load_shopping_list()
+    shopping_list.append(item)
+    save_shopping_list(shopping_list)
+
+def clear_shopping_list():
+    """Clear the shopping list.
+    """
+    with open(SHOPPING_LIST_FILE_NAME, "w") as f:
+        json.dump([], f)
+
+def load_shopping_list() -> List[str]:
+    """Load the shopping list from the JSON file.
+    
+    Returns:
+        List[str]: The shopping list
+    """
+    try:
+        with open(SHOPPING_LIST_FILE_NAME, "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return []
+
+def save_shopping_list(shopping_list: List[str]):
+    """Save the shopping list to the JSON file.
+    
+    Args:
+        shopping_list (List[str]): The shopping list to save
+    """
+    with open(SHOPPING_LIST_FILE_NAME, "w+") as f:
+        json.dump(shopping_list, f)
