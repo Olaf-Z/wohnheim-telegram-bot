@@ -6,7 +6,7 @@ import os
 import logging
 import logging.config
 from pathlib import Path
-from utils import (ChoreType, DueDay, clear_shopping_list,
+from utils import (ChoreType, DueDay, add_to_shopping_list, clear_shopping_list,
                        load_chore_data, load_shopping_list, save_chore_data,
                        get_user_room, get_room_assignments_reversed, add_registration_request,
                        remove_room_assignment, generate_chore_data_week_start, get_incomplete_chores,
@@ -640,7 +640,7 @@ async def show_shopping_list(update: Update, context: ContextTypes.DEFAULT_TYPE)
         text=constants.SHOPPING_LIST_HEADER + "\n" + "\n".join(shopping_list)
     )
 
-async def add_to_shopping_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def handle_add_to_shopping_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the /einkaufen command by adding an item to the shopping list.
     
     Args:
@@ -710,7 +710,7 @@ def main():
     application.add_handler(CommandHandler('show_requests', show_registration_requests))
     application.add_handler(CommandHandler('set_role', set_user_role))
     application.add_handler(CommandHandler('complete_all', complete_all_chores))
-    application.add_handler(CommandHandler('einkaufen', add_to_shopping_list))
+    application.add_handler(CommandHandler('einkaufen', handle_add_to_shopping_list))
     application.add_handler(CommandHandler('einkaufsliste', show_shopping_list))
 
     logging.info("Setting up job queue")
