@@ -669,7 +669,7 @@ async def handle_add_to_shopping_list(update: Update, context: ContextTypes.DEFA
         return
     
     item = " ".join(context.args)
-    if not re.match(r'^[a-zA-Z0-9\s]+$', item):
+    if not re.match(r'^[a-zA-Z0-9üöäß\s]+$', item):
         logging.warning(f"User {user_id} provided invalid shopping item: {item}")
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
