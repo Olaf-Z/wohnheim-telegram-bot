@@ -546,12 +546,17 @@ def censor_in_groups(func):
             chat_id = update.effective_chat.id
             user_id = update.effective_user.id
             user_role = get_user_role(user_id)
+        except:
+            return func(*args, **kwargs)
+        
+        try:
             if chat_id < 0 and user_role != UserRole.ADMIN and user_role != UserRole.WOHNHEIMSSPRECHER:
                 context.bot.delete_message(chat_id=chat_id, message_id=update.message.message_id)
                 context.bot.send_message(chat_id=user_id, text=TELL_TO_SEND_PRIVATE_MESSAGE)
                 return
         except Exception as e:
             logging.warning(f"An Exception occurred during message censoring:\n{e}")
+            return
         finally:
             return func(*args, **kwargs)
 
