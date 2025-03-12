@@ -11,7 +11,7 @@ from utils import (ChoreType, DueDay, add_to_shopping_list, clear_shopping_list,
                        get_user_room, get_room_assignments_reversed, add_registration_request,
                        remove_room_assignment, generate_chore_data_week_start, get_incomplete_chores,
                        save_penalty_log, get_user_role, UserRole, load_registration_requests,
-                       save_room_assignments, load_room_assignments)
+                       save_room_assignments, load_room_assignments, censor_in_groups)
 import constants as constants
 
 # Set up logging from config file
@@ -56,6 +56,7 @@ def get_week_number() -> int:
     return datetime.now().isocalendar()[1]
 
 
+@censor_in_groups
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the /start command by sending a welcome message.
 
@@ -70,6 +71,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+@censor_in_groups
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the /hilfe command by sending a list of available commands.
 
@@ -84,6 +86,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+@censor_in_groups
 async def show_chores(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the /aufgaben command by showing all chores for the current week.
 
@@ -103,6 +106,7 @@ async def show_chores(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+@censor_in_groups
 async def mark_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the /erledigt command by marking the user's chore as completed.
 
@@ -295,6 +299,7 @@ async def check_reminders(context: ContextTypes.DEFAULT_TYPE):
         logging.error(f"Error in reminder job: {e}", exc_info=True)
 
 
+@censor_in_groups
 async def move_in(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the /movein command for new residents.
 
@@ -345,6 +350,7 @@ async def move_in(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+@censor_in_groups
 async def move_out(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the /moveout command for departing residents.
 
@@ -369,6 +375,7 @@ async def move_out(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
+@censor_in_groups
 async def show_my_chore(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the /meindienst command by showing the user's chore for this week.
     
@@ -435,6 +442,7 @@ async def complete_all_chores(update: Update, context: ContextTypes.DEFAULT_TYPE
         text=constants.ALL_CHORES_COMPLETED
     )
 
+@censor_in_groups
 async def accept_all_registrations(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the /accept_all command to approve all pending room registration requests.
     
@@ -497,6 +505,7 @@ async def accept_all_registrations(update: Update, context: ContextTypes.DEFAULT
     )
 
 
+@censor_in_groups
 async def show_registration_requests(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the /show_requests command to list all pending room registration requests.
     
@@ -550,6 +559,7 @@ async def show_registration_requests(update: Update, context: ContextTypes.DEFAU
     )
 
 
+@censor_in_groups
 async def set_user_role(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the /set_role command to assign roles to users.
     
@@ -626,6 +636,7 @@ async def set_user_role(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print(f"Failed to notify user {target_user_id} about new role: {e}")
 
 
+@censor_in_groups
 async def show_shopping_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the /einkaufsliste command by showing the current shopping list.
     
@@ -640,6 +651,7 @@ async def show_shopping_list(update: Update, context: ContextTypes.DEFAULT_TYPE)
         text=constants.SHOPPING_LIST_HEADER + "\n" + "\n".join(shopping_list)
     )
 
+@censor_in_groups
 async def handle_add_to_shopping_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle the /einkaufen command by adding an item to the shopping list.
     

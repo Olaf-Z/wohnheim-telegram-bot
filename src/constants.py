@@ -92,3 +92,5 @@ SHOPPING_LIST_USAGE = "Verwendung: /einkaufen <item>\nBeispiel: /einkaufen Milch
 SHOPPING_LIST_ENTRY_ADDED = "{} wurde zur Einkaufsliste hinzugefügt!"
 SHOPPING_LIST_INVALID_ITEM = "Ungültiges Einkaufsitem. Bitte verwende nur Buchstaben, Zahlen und Leerzeichen."
 SHOPPING_LIST_DUPLICATE_ITEM = "Dieser Artikel ist bereits in der Einkaufsliste enthalten."
+
+TELL_TO_SEND_PRIVATE_MESSAGE = "Bitte verwende diesen Befehl nur im privaten Chat mit dem Bot!"

@@ -1,8 +1,9 @@
 from enum import Enum
+import logging
 from typing import List, Dict
 import json
 import os
-from constants import ROOM_ORDER, CHORE_DATA_FILE_NAME, ROOM_ASSIGNMENTS_FILE_NAME, REGISTRATION_REQUESTS_FILE_NAME, PENALTY_LOG_FILE_NAME, ROLES_FILE_NAME, SHOPPING_LIST_FILE_NAME
+from constants import ROOM_ORDER, CHORE_DATA_FILE_NAME, ROOM_ASSIGNMENTS_FILE_NAME, REGISTRATION_REQUESTS_FILE_NAME, PENALTY_LOG_FILE_NAME, ROLES_FILE_NAME, SHOPPING_LIST_FILE_NAME, TELL_TO_SEND_PRIVATE_MESSAGE
 from datetime import datetime
 import csv
 
@@ -536,3 +537,22 @@ def save_shopping_list(shopping_list: List[str]):
     """
     with open(SHOPPING_LIST_FILE_NAME, "w+") as f:
         json.dump(shopping_list, f)
+
+def censor_in_groups(func):
+
+    def wrapper(*args, **kwargs):
+        try:
+            update, context = args
+            chat_id = update.effective_chat.id
+            user_id = update.effective_user.id
+            user_role = get_user_role(user_id)
+            if chat_id < 0 and user_role != UserRole.ADMIN and user_role != UserRole.WOHNHEIMSSPRECHER:
+                context.bot.delete_message(chat_id=chat_id, message_id=update.message.message_id)
+                context.bot.send_message(chat_id=user_id, text=TELL_TO_SEND_PRIVATE_MESSAGE)
+                return
+        except Exception as e:
+            logging.warning(f"An Exception occurred during message censoring:\n{e}")
+        finally:
+            return func(*args, **kwargs)
+
+    return wrapper
