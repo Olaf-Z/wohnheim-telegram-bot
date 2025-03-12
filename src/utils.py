@@ -540,7 +540,7 @@ def save_shopping_list(shopping_list: List[str]):
 
 def censor_in_groups(func):
 
-    def wrapper(*args, **kwargs):
+    async def wrapper(*args, **kwargs):
         try:
             update, context = args
             chat_id = update.effective_chat.id
@@ -549,15 +549,11 @@ def censor_in_groups(func):
         except:
             return func(*args, **kwargs)
         
-        try:
-            if chat_id < 0 and user_role != UserRole.ADMIN and user_role != UserRole.WOHNHEIMSSPRECHER:
-                context.bot.delete_message(chat_id=chat_id, message_id=update.message.message_id)
-                context.bot.send_message(chat_id=user_id, text=TELL_TO_SEND_PRIVATE_MESSAGE)
-                return
-        except Exception as e:
-            logging.warning(f"An Exception occurred during message censoring:\n{e}")
+        if chat_id < 0 and user_role != UserRole.ADMIN and user_role != UserRole.WOHNHEIMSSPRECHER:
+            await context.bot.delete_message(chat_id=chat_id, message_id=update.message.message_id)
+            await context.bot.send_message(chat_id=user_id, text=TELL_TO_SEND_PRIVATE_MESSAGE)
             return
-        finally:
-            return func(*args, **kwargs)
+
+        return func(*args, **kwargs)
 
     return wrapper
