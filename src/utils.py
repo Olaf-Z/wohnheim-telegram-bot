@@ -547,13 +547,13 @@ def censor_in_groups(func):
             user_id = update.effective_user.id
             user_role = get_user_role(user_id)
         except:
-            return func(*args, **kwargs)
+            return await func(*args, **kwargs)
         
         if chat_id < 0 and user_role != UserRole.ADMIN and user_role != UserRole.WOHNHEIMSSPRECHER:
             await context.bot.delete_message(chat_id=chat_id, message_id=update.message.message_id)
             await context.bot.send_message(chat_id=user_id, text=TELL_TO_SEND_PRIVATE_MESSAGE)
             return
 
-        return func(*args, **kwargs)
+        return await func(*args, **kwargs)
 
     return wrapper
